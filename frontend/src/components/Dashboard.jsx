@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { supabase, mapStaff, mapClass, mapSubject, mapRoom } from "../api/supabase";
-import { C, card, thStyle, tdStyle, tag, ghostBtn, btn } from "../styles/theme";
+import React from "react";
+import { supabase } from "../api/supabase";
+import { C, card, thStyle, tdStyle, tag } from "../styles/theme";
 import { Heading, Spinner } from "./Common";
 import { subjectColor } from "../logic/utils";
 
@@ -78,17 +78,9 @@ export async function seedDatabase(setStaff, setClasses, setSubjects, setRooms, 
   }
 }
 
-export function Dashboard({ staff, classes, subjects, rooms, result, setPage, loading, setStaff, setClasses, setSubjects, setRooms, showToast }) {
+export function Dashboard({ staff, classes, subjects, rooms, result, setPage, loading }) {
   const totalHrs = subjects.reduce((a,s)=>a+s.hoursPerWeek,0);
   const labCount = subjects.filter(s=>s.isLab).length;
-  const [seeding, setSeeding] = useState(false);
-
-  const handleSeed = async () => {
-    if (!confirm("This will delete all existing data and insert samples. Continue?")) return;
-    setSeeding(true);
-    await seedDatabase(setStaff, setClasses, setSubjects, setRooms, showToast);
-    setSeeding(false);
-  };
 
   const stats = [
     { v:staff.length,   l:"Faculty",      c:C.indigo, bg:C.indigoLt, bd:C.indigoBd, i:"◉" },
@@ -102,13 +94,10 @@ export function Dashboard({ staff, classes, subjects, rooms, result, setPage, lo
     <div>
       <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:28 }}>
         <Heading sub={new Date().toLocaleDateString("en-IN",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}> Admin Dashboard </Heading>
-        <button style={ghostBtn({ fontSize:12, borderColor:C.amber, color:C.amber, background:"#FFFBEB" })} onClick={handleSeed} disabled={seeding}>
-          {seeding ? "⏳ Seeding..." : "🌱 Seed Sample Data"}
-        </button>
       </div>
       {loading ? <Spinner /> : (
         <>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:14, marginBottom:24 }}>
+        <div className="grid-stats">
           {stats.map(s=>(
             <div key={s.l} style={{ background:s.bg, border:`1.5px solid ${s.bd}`, borderRadius:12, padding:"18px 20px" }}>
               <div style={{ fontSize:13, marginBottom:8 }}>{s.i}</div>
@@ -117,7 +106,7 @@ export function Dashboard({ staff, classes, subjects, rooms, result, setPage, lo
             </div>
           ))}
         </div>
-        <div style={{ display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:20 }}>
+        <div className="grid-2col">
           <div style={card()}>
             <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:17, fontWeight:700, margin:"0 0 16px" }}>Faculty Overview</h3>
             <table style={{ width:"100%", borderCollapse:"collapse" }}>

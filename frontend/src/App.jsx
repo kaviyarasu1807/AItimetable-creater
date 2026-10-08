@@ -80,15 +80,13 @@ export default function App() {
         onLogout={async () => { await supabase.auth.signOut(); setSession(null); }}
       />
 
-      <main style={{ maxWidth:1200, margin:"0 auto", padding:32 }}>
+      <main className="main-content">
         {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
         {page === "dashboard" && (
           <Dashboard 
             staff={staff} classes={classes} subjects={subjects} rooms={rooms} 
             result={result} setPage={setPage} loading={loading}
-            setStaff={setStaff} setClasses={setClasses} setSubjects={setSubjects} setRooms={setRooms}
-            showToast={showToast}
           />
         )}
         {page === "staff"    && <StaffPage staff={staff} setStaff={setStaff} show={showToast} />}

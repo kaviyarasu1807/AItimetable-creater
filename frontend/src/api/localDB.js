@@ -11,63 +11,11 @@ const uuid = () =>
         return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
       });
 
-const T = {
-  rajesh:  'a0000000-0000-0000-0000-000000000001',
-  meena:   'a0000000-0000-0000-0000-000000000002',
-  arjun:   'a0000000-0000-0000-0000-000000000003',
-  priya:   'a0000000-0000-0000-0000-000000000004',
-  suresh:  'a0000000-0000-0000-0000-000000000005',
-  kavitha: 'a0000000-0000-0000-0000-000000000006',
-  anil:    'a0000000-0000-0000-0000-000000000007',
-};
-const CL = {
-  csA:  'b0000000-0000-0000-0000-000000000001',
-  csB:  'b0000000-0000-0000-0000-000000000002',
-  itA:  'b0000000-0000-0000-0000-000000000003',
-  cseB: 'b0000000-0000-0000-0000-000000000004',
-};
-
 const DEMO = {
-  staff: [
-    { id: T.rajesh,  name: 'Dr. Rajesh Kumar',  subject: 'Mathematics',      dept: 'Science',    email: 'rajesh@college.edu',  availability: ['Monday','Tuesday','Wednesday','Thursday','Friday'], max_hrs_day: 4, prefer_morning: true,  created_at: '2024-01-01T00:00:01Z' },
-    { id: T.meena,   name: 'Prof. Meena Iyer',  subject: 'Physics',          dept: 'Science',    email: 'meena@college.edu',   availability: ['Monday','Tuesday','Wednesday','Thursday','Friday'], max_hrs_day: 4, prefer_morning: false, created_at: '2024-01-01T00:00:02Z' },
-    { id: T.arjun,   name: 'Dr. Arjun Sharma',  subject: 'Chemistry',        dept: 'Science',    email: 'arjun@college.edu',   availability: ['Monday','Tuesday','Wednesday','Thursday','Friday'], max_hrs_day: 4, prefer_morning: false, created_at: '2024-01-01T00:00:03Z' },
-    { id: T.priya,   name: 'Ms. Priya Nair',    subject: 'Computer Science', dept: 'Technology', email: 'priya@college.edu',   availability: ['Monday','Tuesday','Wednesday','Thursday','Friday'], max_hrs_day: 5, prefer_morning: true,  created_at: '2024-01-01T00:00:04Z' },
-    { id: T.suresh,  name: 'Mr. Suresh Babu',   subject: 'English',          dept: 'Humanities', email: 'suresh@college.edu',  availability: ['Monday','Tuesday','Thursday','Friday'],            max_hrs_day: 3, prefer_morning: true,  created_at: '2024-01-01T00:00:05Z' },
-    { id: T.kavitha, name: 'Dr. Kavitha Rajan', subject: 'Biology',          dept: 'Science',    email: 'kavitha@college.edu', availability: ['Monday','Wednesday','Friday'],                    max_hrs_day: 3, prefer_morning: false, created_at: '2024-01-01T00:00:06Z' },
-    { id: T.anil,    name: 'Mr. Anil Menon',    subject: 'Data Structures',  dept: 'Technology', email: 'anil@college.edu',    availability: ['Monday','Tuesday','Wednesday','Thursday','Friday'], max_hrs_day: 4, prefer_morning: false, created_at: '2024-01-01T00:00:07Z' },
-  ],
-  classes: [
-    { id: CL.csA,  name: 'CS-A',  year: 1, section: 'A', dept: 'Computer Science',        capacity: 60, created_at: '2024-01-01T00:01:01Z' },
-    { id: CL.csB,  name: 'CS-B',  year: 1, section: 'B', dept: 'Computer Science',        capacity: 60, created_at: '2024-01-01T00:01:02Z' },
-    { id: CL.itA,  name: 'IT-A',  year: 2, section: 'A', dept: 'Information Technology',  capacity: 55, created_at: '2024-01-01T00:01:03Z' },
-    { id: CL.cseB, name: 'CSE-B', year: 3, section: 'B', dept: 'Computer Science & Eng.', capacity: 50, created_at: '2024-01-01T00:01:04Z' },
-  ],
-  subjects: [
-    { id: 's0000000-0000-0000-0000-000000000001', class_id: CL.csA,  teacher_id: T.rajesh,  name: 'Mathematics',      hours_per_week: 5, is_lab: false, prefer_morning: true,  created_at: '2024-01-01T00:02:01Z' },
-    { id: 's0000000-0000-0000-0000-000000000002', class_id: CL.csA,  teacher_id: T.meena,   name: 'Physics',          hours_per_week: 3, is_lab: false, prefer_morning: false, created_at: '2024-01-01T00:02:02Z' },
-    { id: 's0000000-0000-0000-0000-000000000003', class_id: CL.csA,  teacher_id: T.priya,   name: 'Computer Science', hours_per_week: 4, is_lab: false, prefer_morning: true,  created_at: '2024-01-01T00:02:03Z' },
-    { id: 's0000000-0000-0000-0000-000000000004', class_id: CL.csA,  teacher_id: T.suresh,  name: 'English',          hours_per_week: 3, is_lab: false, prefer_morning: true,  created_at: '2024-01-01T00:02:04Z' },
-    { id: 's0000000-0000-0000-0000-000000000005', class_id: CL.csA,  teacher_id: T.priya,   name: 'CS Lab',           hours_per_week: 2, is_lab: true,  prefer_morning: false, created_at: '2024-01-01T00:02:05Z' },
-    { id: 's0000000-0000-0000-0000-000000000006', class_id: CL.csB,  teacher_id: T.rajesh,  name: 'Mathematics',      hours_per_week: 5, is_lab: false, prefer_morning: true,  created_at: '2024-01-01T00:02:06Z' },
-    { id: 's0000000-0000-0000-0000-000000000007', class_id: CL.csB,  teacher_id: T.arjun,   name: 'Chemistry',        hours_per_week: 3, is_lab: false, prefer_morning: false, created_at: '2024-01-01T00:02:07Z' },
-    { id: 's0000000-0000-0000-0000-000000000008', class_id: CL.csB,  teacher_id: T.priya,   name: 'Computer Science', hours_per_week: 3, is_lab: false, prefer_morning: true,  created_at: '2024-01-01T00:02:08Z' },
-    { id: 's0000000-0000-0000-0000-000000000009', class_id: CL.csB,  teacher_id: T.suresh,  name: 'English',          hours_per_week: 3, is_lab: false, prefer_morning: true,  created_at: '2024-01-01T00:02:09Z' },
-    { id: 's0000000-0000-0000-0000-000000000010', class_id: CL.itA,  teacher_id: T.meena,   name: 'Physics',          hours_per_week: 3, is_lab: false, prefer_morning: false, created_at: '2024-01-01T00:02:10Z' },
-    { id: 's0000000-0000-0000-0000-000000000011', class_id: CL.itA,  teacher_id: T.arjun,   name: 'Chemistry',        hours_per_week: 3, is_lab: false, prefer_morning: false, created_at: '2024-01-01T00:02:11Z' },
-    { id: 's0000000-0000-0000-0000-000000000012', class_id: CL.itA,  teacher_id: T.anil,    name: 'Data Structures',  hours_per_week: 4, is_lab: false, prefer_morning: false, created_at: '2024-01-01T00:02:12Z' },
-    { id: 's0000000-0000-0000-0000-000000000013', class_id: CL.itA,  teacher_id: T.kavitha, name: 'Biology',          hours_per_week: 3, is_lab: false, prefer_morning: false, created_at: '2024-01-01T00:02:13Z' },
-    { id: 's0000000-0000-0000-0000-000000000014', class_id: CL.cseB, teacher_id: T.anil,    name: 'Data Structures',  hours_per_week: 4, is_lab: false, prefer_morning: false, created_at: '2024-01-01T00:02:14Z' },
-    { id: 's0000000-0000-0000-0000-000000000015', class_id: CL.cseB, teacher_id: T.priya,   name: 'Computer Science', hours_per_week: 4, is_lab: false, prefer_morning: true,  created_at: '2024-01-01T00:02:15Z' },
-    { id: 's0000000-0000-0000-0000-000000000016', class_id: CL.cseB, teacher_id: T.priya,   name: 'CS Lab',           hours_per_week: 2, is_lab: true,  prefer_morning: false, created_at: '2024-01-01T00:02:16Z' },
-  ],
-  rooms: [
-    { id: 'r0000000-0000-0000-0000-000000000001', name: 'Room 101',    capacity: 65, is_lab: false, created_at: '2024-01-01T00:03:01Z' },
-    { id: 'r0000000-0000-0000-0000-000000000002', name: 'Room 102',    capacity: 65, is_lab: false, created_at: '2024-01-01T00:03:02Z' },
-    { id: 'r0000000-0000-0000-0000-000000000003', name: 'Room 201',    capacity: 60, is_lab: false, created_at: '2024-01-01T00:03:03Z' },
-    { id: 'r0000000-0000-0000-0000-000000000004', name: 'CS Lab',      capacity: 40, is_lab: true,  created_at: '2024-01-01T00:03:04Z' },
-    { id: 'r0000000-0000-0000-0000-000000000005', name: 'Physics Lab', capacity: 40, is_lab: true,  created_at: '2024-01-01T00:03:05Z' },
-  ],
+  staff: [],
+  classes: [],
+  subjects: [],
+  rooms: [],
   timetables: [],
 };
 
