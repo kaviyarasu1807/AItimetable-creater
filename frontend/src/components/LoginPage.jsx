@@ -90,13 +90,6 @@ export function LoginPage({ onLogin }) {
             {loading ? "Please wait…" : mode==="signup" ? "Create Account" : "Sign In →"}
           </button>
 
-          {/* Development Bypass */}
-          <button 
-            style={{ ...btn("transparent", C.textSm), border:`1.5px dashed ${C.border}`, color:C.textSm, fontSize:12, width:"100%", marginTop:8 }}
-            onClick={() => onLogin({ user: { email: "dev@timetableai.local", id: "dev-user-id" } })}
-          >
-            🚧 Skip Auth (Development Mode)
-          </button>
         </div>
       </div>
     </div>
