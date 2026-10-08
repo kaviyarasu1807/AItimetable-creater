@@ -105,7 +105,8 @@ export default function App() {
         {page === "timetable" && (
           <TimetablePage 
             result={result} setResult={setResult} 
-            classes={classes} staff={staff} 
+            classes={classes} staff={staff}
+            subjects={subjects}
             days={days} slots={slots}
             show={showToast} 
           />
