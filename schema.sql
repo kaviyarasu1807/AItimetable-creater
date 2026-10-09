@@ -6,7 +6,7 @@
 create extension if not exists "pgcrypto";
 
 -- ─── STAFF ────────────────────────────────────────────────────
-reate table if not exists public.staff (
+create table if not exists public.staff (
   id              uuid primary key default gen_random_uuid(),
   name            text not null,
   subject         text not null,
@@ -81,6 +81,13 @@ create policy "auth_all_timetables" on public.timetables  for all to authenticat
 create index if not exists idx_subjects_class_id    on public.subjects(class_id);
 create index if not exists idx_subjects_teaccher_id  on public.subjects(teacher_id);
 create index if not exists idx_timetables_generated on public.timetables(generated_at desc);
+
+-- ─── ENSURE DEFAULTS FOR EXISTING TABLES ──────────────────────
+alter table public.staff      alter column id set default gen_random_uuid();
+alter table public.classes    alter column id set default gen_random_uuid();
+alter table public.subjects   alter column id set default gen_random_uuid();
+alter table public.rooms      alter column id set default gen_random_uuid();
+alter table public.timetables alter column id set default gen_random_uuid();
 
 -- Done! Create your first user via Authentication → Users in Supabase Dashboard,
 -- or use the Sign Up form in the app.

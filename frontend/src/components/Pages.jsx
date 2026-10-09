@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { supabase, mapStaff, mapClass, mapSubject, mapRoom, mapTimetable } from "../api/supabase";
 import { C, card, inp, lbl, btn, tag, thStyle, tdStyle, editBtn, dangerBtn, ghostBtn, outlineBtn } from "../styles/theme";
 import { Heading, Spinner, Toast } from "./Common";
@@ -22,7 +22,8 @@ export function StaffPage({ staff, setStaff, show }) {
         setStaff(prev => prev.map(t => t.id === edit ? mapStaff(data) : t));
         show("Staff member updated", "success"); setEdit(null);
       } else {
-        const { data, error } = await supabase.from("staff").insert(p).select().single();
+        const payload = { id: crypto.randomUUID(), ...p };
+        const { data, error } = await supabase.from("staff").insert(payload).select().single();
         if (error) throw error;
         setStaff(prev => [...prev, mapStaff(data)]);
         show("Staff member added", "success");
@@ -98,7 +99,8 @@ export function ClassesPage({ classes, setClasses, show }) {
     if (!form.name) return;
     setSaving(true);
     try {
-      const { data, error } = await supabase.from("classes").insert(form).select().single();
+      const payload = { id: crypto.randomUUID(), ...form };
+      const { data, error } = await supabase.from("classes").insert(payload).select().single();
       if (error) throw error;
       setClasses(prev => [...prev, mapClass(data)]);
       show("Class added", "success");
@@ -149,7 +151,7 @@ export function SubjectsPage({ subjects, setSubjects, staff, classes, show }) {
     if (!form.classId || !form.teacherId || !form.name) return;
     setSaving(true);
     try {
-      const payload = { class_id: form.classId, teacher_id: form.teacherId, name: form.name, hours_per_week: form.hoursPerWeek, is_lab: form.isLab };
+      const payload = { id: crypto.randomUUID(), class_id: form.classId, teacher_id: form.teacherId, name: form.name, hours_per_week: form.hoursPerWeek, is_lab: form.isLab };
       const { data, error } = await supabase.from("subjects").insert(payload).select().single();
       if (error) throw error;
       setSubjects(prev => [...prev, mapSubject(data)]);
@@ -216,7 +218,13 @@ export function RoomsPage({ rooms, setRooms, show }) {
     if (!form.name) return;
     setSaving(true);
     try {
-      const { data, error } = await supabase.from("rooms").insert({ name: form.name, capacity: form.capacity, is_lab: form.isLab }).select().single();
+      const payload = {
+        id: crypto.randomUUID(),
+        name: form.name,
+        capacity: form.capacity,
+        is_lab: form.isLab
+      };
+      const { data, error } = await supabase.from("rooms").insert(payload).select().single();
       if (error) throw error;
       setRooms(prev => [...prev, mapRoom(data)]);
       show("Room added", "success");
@@ -344,28 +352,52 @@ export function GeneratePage({ staff, classes, subjects, rooms, days, slots, set
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState([]);
+  const [animCells, setAnimCells] = useState({}); // { classId_day_slotId: cellData }
   const logRef = useRef(null);
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [logs]);
 
   const run = async () => {
     if (!staff.length || !classes.length || !subjects.length) { show("Please add Staff, Classes, and Subjects before generating.", "error"); return; }
-    setRunning(true); setProgress(10); setLogs(["[INIT] Starting AI Engine..."]);
+    setRunning(true); setProgress(10); setLogs(["[INIT] Starting AI Engine..."]); setAnimCells({});
     try {
       setProgress(30); setLogs(p => [...p, "[AI] Running generation..."]);
       const logCb = m => setLogs(p => [...p, m]);
       const data = algo === "ga" ? runGA(staff, classes, subjects, days, slots, {}, logCb) : runCSP(staff, classes, subjects, days, slots, rooms, logCb);
-      setProgress(80);
+      setProgress(70);
       if (data.error) throw new Error(data.error);
+
+      // Animate cells filling in one by one
+      setLogs(p => [...p, "[ANIM] Rendering timetable..."]);
+      const allCells = [];
+      Object.entries(data.timetable).forEach(([cid, daysObj]) => {
+        Object.entries(daysObj).forEach(([day, slotsObj]) => {
+          Object.entries(slotsObj).forEach(([sid, cell]) => {
+            if (cell && !cell.isLunch) allCells.push({ key: `${cid}_${day}_${sid}`, cell });
+          });
+        });
+      });
+      // Reveal cells with staggered delay
+      for (let i = 0; i < allCells.length; i++) {
+        await new Promise(r => setTimeout(r, 18));
+        setAnimCells(prev => ({ ...prev, [allCells[i].key]: allCells[i].cell }));
+        if (i % 10 === 0) setProgress(70 + Math.round((i / allCells.length) * 20));
+      }
+      setProgress(90);
       setLogs(p => [...p, "[AI] Generation completed", `[AI] Conflicts: ${data.conflicts}`]);
-      const { data: dbData, error } = await supabase.from("timetables").insert({ timetable_data: data.timetable, teacher_view: data.teacherView, utilization: data.utilization, violations: data.violations, conflicts: data.conflicts, algorithm: algo }).select().single();
+
+      const { data: dbData, error } = await supabase.from("timetables").insert({ id: crypto.randomUUID(), timetable_data: data.timetable, teacher_view: data.teacherView, utilization: data.utilization, violations: data.violations, conflicts: data.conflicts, algorithm: algo }).select().single();
       if (error) throw error;
       setLogs(p => [...p, "[DB] Result stored"]); setProgress(100);
       const mapped = mapTimetable(dbData);
       setResult(mapped); setHistory(prev => [mapped, ...prev]);
-      setTimeout(() => setPage("timetable"), 500);
+      setTimeout(() => setPage("timetable"), 800);
     } catch (e) { setLogs(p => [...p, `[ERROR] ${e.message}`]); show(e.message); }
     setRunning(false);
   };
+
+  // Pick first class for preview
+  const previewClass = classes[0];
+  const previewSlots = slots.filter(s => !s.isLunch);
 
   return (
     <div>
@@ -380,14 +412,14 @@ export function GeneratePage({ staff, classes, subjects, rooms, days, slots, set
             <label style={{ cursor: "pointer", padding: 12, borderRadius: 10, background: algo === "ga" ? C.indigoLt : C.bg2, border: `1.5px solid ${algo === "ga" ? C.indigoBd : C.border}` }}>
               <input type="radio" checked={algo === "ga"} onChange={() => setAlgo("ga")} style={{ marginRight: 10 }} /><b>Genetic Algorithm</b> — Better for complex datasets.
             </label>
-            <button style={{ ...btn(), marginTop: 10, padding: 14, fontSize: 15 }} onClick={run} disabled={running}>{running ? "Processing..." : "Run Generator"}</button>
+            <button style={{ ...btn(), marginTop: 10, padding: 14, fontSize: 15 }} onClick={run} disabled={running}>{running ? "⏳ Generating..." : "⚡ Run Generator"}</button>
             {running && <div style={{ height: 6, background: C.bg2, borderRadius: 4 }}><div style={{ height: "100%", background: C.indigo, width: `${progress}%`, borderRadius: 4, transition: "width .3s" }} /></div>}
           </div>
         </div>
         <div style={card({ background: C.text, color: "#fff" })}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
             <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.6 }}>CONSOLE</span>
-            {running && <span style={{ fontSize: 10, color: C.green }}>ACTIVE</span>}
+            {running && <span style={{ fontSize: 10, color: C.green }}>● ACTIVE</span>}
           </div>
           <div ref={logRef} style={{ height: 200, overflowY: "auto", fontFamily: "monospace", fontSize: 12, lineHeight: 1.6 }}>
             {logs.map((l, i) => <div key={i}>{l}</div>)}
@@ -395,6 +427,44 @@ export function GeneratePage({ staff, classes, subjects, rooms, days, slots, set
           </div>
         </div>
       </div>
+
+      {/* Animated preview grid */}
+      {(running || Object.keys(animCells).length > 0) && previewClass && (
+        <div style={card({ borderTop: `3px solid ${C.indigo}` })}>
+          <h3 style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 700, color: C.indigo, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Live Preview — {previewClass.name}
+          </h3>
+          <div className="table-scroll">
+            <table style={{ borderCollapse: "separate", borderSpacing: "3px", minWidth: 500 }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: "6px 10px", fontSize: 10, color: C.textSm, fontWeight: 700, textTransform: "uppercase" }}>Slot</th>
+                  {days.map(d => <th key={d} style={{ padding: "6px 10px", fontSize: 10, color: C.textSm, fontWeight: 700, textTransform: "uppercase", textAlign: "center", minWidth: 80 }}>{d.slice(0,3)}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {previewSlots.map(slot => (
+                  <tr key={slot.id}>
+                    <td style={{ padding: "5px 10px", fontSize: 10, color: C.textSm, fontWeight: 600, whiteSpace: "nowrap" }}>{slot.label}</td>
+                    {days.map(day => {
+                      const key = `${previewClass.id}_${day}_${slot.id}`;
+                      const cell = animCells[key];
+                      return (
+                        <td key={day} style={{ padding: 3 }}>
+                          <div className={cell ? "cell-animate" : ""} style={{ minHeight: 36, borderRadius: 7, background: cell ? C.indigoLt : C.bg2, border: `1px solid ${cell ? C.indigoBd : C.border}`, padding: "4px 7px", transition: "background .2s" }}>
+                            {cell && <div style={{ fontSize: 10, fontWeight: 700, color: C.indigo, lineHeight: 1.3 }}>{cell.subject}</div>}
+                            {cell && <div style={{ fontSize: 9, color: C.textSm }}>{cell.teacherName}</div>}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -409,11 +479,37 @@ export function TimetablePage({ result, setResult, staff, classes, days, slots, 
   const [overrideMode, setOverrideMode] = useState(false);
   const [editCell, setEditCell] = useState(null);
   const [editForm, setEditForm] = useState({ subjectId: "", teacherId: "", custom: "" });
+  const [heatmap, setHeatmap] = useState(false);
 
   if (!result) return <div style={card()}>No result yet. Go to Generate.</div>;
 
   const { timetable, teacherView, violations = [] } = result;
   const classSubjects = (subjects || []).filter(s => s.classId === selClass);
+
+  // Heatmap: compute teacher hours in current timetable
+  const teacherHeatmap = useMemo(() => {
+    if (!heatmap || !result?.timetable) return {};
+    const counts = {};
+    Object.values(result.timetable).forEach(daysObj => {
+      Object.values(daysObj).forEach(slotsObj => {
+        Object.values(slotsObj).forEach(cell => {
+          if (cell && !cell.isLunch && cell.teacherId) counts[cell.teacherId] = (counts[cell.teacherId] || 0) + 1;
+        });
+      });
+    });
+    return counts;
+  }, [heatmap, result]);
+
+  const heatColor = (teacherId) => {
+    if (!heatmap || !teacherId) return null;
+    const count = teacherHeatmap[teacherId] || 0;
+    const teacher = staff.find(t => t.id === teacherId);
+    const max = (teacher?.maxHrsDay || 4) * 5;
+    const ratio = count / max;
+    if (ratio > 0.85) return { bg: "#FEF2F2", border: "#FECACA", text: "#DC2626" };
+    if (ratio > 0.55) return { bg: "#FFFBEB", border: "#FDE68A", text: "#D97706" };
+    return { bg: "#ECFDF5", border: "#A7F3D0", text: "#059669" };
+  };
 
   const onDragStart = (day, sid) => { if (!overrideMode) setDragging({ day, slotId: sid }); };
   const onDragOver = (e, day, sid) => { if (!overrideMode) { e.preventDefault(); setOver({ day, slotId: sid }); } };
@@ -542,6 +638,9 @@ export function TimetablePage({ result, setResult, staff, classes, days, slots, 
           <button onClick={() => { setOverrideMode(o => !o); setEditCell(null); }} style={{ padding: "7px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", background: overrideMode ? C.amber : C.amberLt, border: `1.5px solid ${C.amberBd}`, color: overrideMode ? "#fff" : C.amber, fontFamily: "'DM Sans',sans-serif" }}>
             {overrideMode ? "✎ Override ON" : "✎ Override OFF"}
           </button>
+          <button onClick={() => setHeatmap(h => !h)} style={{ padding: "7px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", background: heatmap ? C.green : C.greenLt, border: `1.5px solid ${C.greenBd}`, color: heatmap ? "#fff" : C.green, fontFamily: "'DM Sans',sans-serif" }}>
+            {heatmap ? "🌡 Heatmap ON" : "🌡 Heatmap OFF"}
+          </button>
           <button style={ghostBtn()} onClick={saveSwap}>Save Changes</button>
           <button style={outlineBtn(C.indigo)} onClick={exportPDF} disabled={exporting}>{exporting ? "Exporting..." : "Export PDF"}</button>
         </div>
@@ -582,6 +681,7 @@ export function TimetablePage({ result, setResult, staff, classes, days, slots, 
                   const isDragging = dragging?.day === day && dragging?.slotId === slot.id;
                   const isEditTarget = editCell?.day === day && editCell?.slotId === slot.id;
                   if (cell?.isLunch) return <td key={day} style={{ ...tdStyle, background: C.lunchBg, textAlign: "center", fontWeight: 700, fontSize: 11, color: C.lunch, borderRadius: 8 }}>LUNCH</td>;
+                  const heat = cell ? heatColor(cell.teacherId) : null;
                   return (
                     <td key={day}
                       draggable={!overrideMode && view === "class"}
@@ -589,7 +689,7 @@ export function TimetablePage({ result, setResult, staff, classes, days, slots, 
                       onDragOver={e => onDragOver(e, day, slot.id)}
                       onDrop={() => onDrop(day, slot.id)}
                       onClick={() => openEdit(day, slot.id)}
-                      style={{ ...tdStyle, borderRadius: 8, cursor: overrideMode && view === "class" ? "pointer" : view === "class" ? "grab" : "default", background: isEditTarget ? C.amberLt : isOver ? C.indigoLt : isDragging ? C.bg3 : cell ? C.bg1 : C.bg2, border: isEditTarget ? `2px solid ${C.amber}` : isOver ? `1.5px solid ${C.indigoBd}` : `1px solid ${C.border}`, minWidth: 90, transition: "background .15s" }}>
+                      style={{ ...tdStyle, borderRadius: 8, cursor: overrideMode && view === "class" ? "pointer" : view === "class" ? "grab" : "default", background: isEditTarget ? C.amberLt : heat ? heat.bg : isOver ? C.indigoLt : isDragging ? C.bg3 : cell ? C.bg1 : C.bg2, border: isEditTarget ? `2px solid ${C.amber}` : heat ? `1.5px solid ${heat.border}` : isOver ? `1.5px solid ${C.indigoBd}` : `1px solid ${C.border}`, minWidth: 90, transition: "background .15s" }}>
                       {cell ? (
                         <div>
                           <div style={{ fontWeight: 700, fontSize: 12, color: C.indigo }}>{cell.subject}</div>

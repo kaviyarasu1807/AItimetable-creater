@@ -10,6 +10,8 @@ import { Dashboard } from "./components/Dashboard";
 // For demo purposes, we'll keep sub-pages in a separate file or define them here if they are small.
 // In a real project, each would be in its own file under components/pages/
 import { StaffPage, ClassesPage, SubjectsPage, RoomsPage, TimeSlotsPage, ConfigPage, GeneratePage, TimetablePage } from "./components/Pages";
+import { StatsPage } from "./components/StatsPage";
+import { OnboardingTour, useTour } from "./components/OnboardingTour";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -27,7 +29,9 @@ export default function App() {
   const [history,  setHistory]  = useState([]);
   const [result,   setResult]   = useState(null);
 
-  const showToast = useCallback((msg, type="error") => {
+  const { showTour, finishTour } = useTour();
+
+  const showToast = useCallback((msg, type = "error") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
   }, []);
@@ -111,7 +115,18 @@ export default function App() {
             show={showToast} 
           />
         )}
+        {page === "stats" && (
+          <StatsPage 
+            staff={staff} 
+            classes={classes} 
+            subjects={subjects} 
+            rooms={rooms} 
+            result={result} 
+          />
+        )}
       </main>
+
+      {showTour && <OnboardingTour onFinish={finishTour} setPage={setPage} />}
     </div>
   );
 }

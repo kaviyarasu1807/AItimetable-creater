@@ -20,7 +20,7 @@ export async function seedDatabase(setStaff, setClasses, setSubjects, setRooms, 
       { name:"Mr. Suresh Babu",   subject:"English",          dept:"Humanities", email:"suresh@college.edu",  availability:["Monday","Tuesday","Thursday","Friday"],            max_hrs_day:3, prefer_morning:true  },
       { name:"Dr. Kavitha Rajan", subject:"Biology",          dept:"Science",    email:"kavitha@college.edu", availability:["Monday","Wednesday","Friday"],                    max_hrs_day:3, prefer_morning:false },
       { name:"Mr. Anil Menon",    subject:"Data Structures",  dept:"Technology", email:"anil@college.edu",    availability:["Monday","Tuesday","Wednesday","Thursday","Friday"], max_hrs_day:4, prefer_morning:false },
-    ]).select();
+    ].map(item => ({ id: crypto.randomUUID(), ...item }))).select();
     if (tErr) throw tErr;
 
     const { data: cData, error: cErr } = await client.from("classes").insert([
@@ -28,7 +28,7 @@ export async function seedDatabase(setStaff, setClasses, setSubjects, setRooms, 
       { name:"CS-B",  year:1, section:"B", dept:"Computer Science",        capacity:60 },
       { name:"IT-A",  year:2, section:"A", dept:"Information Technology",  capacity:55 },
       { name:"CSE-B", year:3, section:"B", dept:"Computer Science & Eng.", capacity:50 },
-    ]).select();
+    ].map(item => ({ id: crypto.randomUUID(), ...item }))).select();
     if (cErr) throw cErr;
 
     const T = Object.fromEntries(tData.map(t => [t.name, t.id]));
@@ -51,7 +51,7 @@ export async function seedDatabase(setStaff, setClasses, setSubjects, setRooms, 
       { class_id:CL["CSE-B"], teacher_id:T["Mr. Anil Menon"],    name:"Data Structures",  hours_per_week:4, is_lab:false, prefer_morning:false },
       { class_id:CL["CSE-B"], teacher_id:T["Ms. Priya Nair"],    name:"Computer Science", hours_per_week:4, is_lab:false, prefer_morning:true  },
       { class_id:CL["CSE-B"], teacher_id:T["Ms. Priya Nair"],    name:"CS Lab",           hours_per_week:2, is_lab:true,  prefer_morning:false },
-    ]);
+    ].map(item => ({ id: crypto.randomUUID(), ...item })));
     if (sErr) throw sErr;
 
     const { error: rErr } = await client.from("rooms").insert([
@@ -60,7 +60,7 @@ export async function seedDatabase(setStaff, setClasses, setSubjects, setRooms, 
       { name:"Room 201",    capacity:60, is_lab:false },
       { name:"CS Lab",      capacity:40, is_lab:true  },
       { name:"Physics Lab", capacity:40, is_lab:true  },
-    ]);
+    ].map(item => ({ id: crypto.randomUUID(), ...item })));
     if (rErr) throw rErr;
 
     const { data: freshStaff    } = await client.from("staff").select("*").order("created_at");

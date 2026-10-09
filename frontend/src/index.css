@@ -115,3 +115,32 @@ button:active { transform: scale(0.98); }
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Cell fill animation ─────────────────────────────── */
+@keyframes cellPop {
+  0%   { opacity: 0; transform: scale(0.7); }
+  60%  { transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.cell-animate {
+  animation: cellPop 0.35s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+
+/* ── Onboarding tour ─────────────────────────────────── */
+@keyframes tourPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(67,56,202,0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(67,56,202,0.15); }
+}
+.tour-highlight {
+  animation: tourPulse 1.4s ease-in-out infinite;
+  border-radius: 10px;
+  position: relative;
+  z-index: 1001;
+}
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  pointer-events: none;
+}
